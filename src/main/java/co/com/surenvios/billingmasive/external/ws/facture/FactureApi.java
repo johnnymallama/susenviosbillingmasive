@@ -26,6 +26,7 @@ public class FactureApi {
 	private static final String HEAD_DOCUMENTTYPE = "X-REF-DOCUMENTTYPE";
 	private static final String HEAD_ASYNC = "X-ASYNC";
 	private static final String HEAD_KEYCONTROL = "X-KEYCONTROL";
+	private static final String HEAD_WHO = "X-WHO";
 	private static final String HEAD_AUTHORIZATION = "Authorization";
 	private static final String PREFIX_AUTH = "Bearer ";
 
@@ -46,6 +47,9 @@ public class FactureApi {
 
 	@Value("${factureApi.notasufix}")
 	private String codigoNotaSufijo;
+
+	@Value("${factureApi.who}")
+	private String codigoWho;
 
 	public LoginFactureResponse login(LoginFactureRequest loginFactureRequest) throws ExceptionLogin {
 		LoginFactureResponse retorno = null;
@@ -89,6 +93,7 @@ public class FactureApi {
 			headers.add(HEAD_KEYCONTROL, tecnicalKey);
 			headers.add(HEAD_AUTHORIZATION, PREFIX_AUTH.concat(token));
 			headers.setContentType(MediaType.APPLICATION_XML);
+			headers.add(HEAD_WHO, this.codigoWho);
 			ResponseEntity<String> response = this.sendPost(this.sendDocumento, headers, body);
 			switch (response.getStatusCode()) {
 			case OK:
@@ -117,6 +122,7 @@ public class FactureApi {
 			headers.add(HEAD_ASYNC, Boolean.FALSE.toString());
 			headers.add(HEAD_AUTHORIZATION, PREFIX_AUTH.concat(token));
 			headers.setContentType(MediaType.APPLICATION_XML);
+			headers.add(HEAD_WHO, this.codigoWho);
 			ResponseEntity<String> response = this.sendPost(this.sendDocumento, headers, body);
 			switch (response.getStatusCode()) {
 			case OK:

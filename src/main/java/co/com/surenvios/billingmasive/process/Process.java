@@ -1,5 +1,6 @@
 package co.com.surenvios.billingmasive.process;
 
+import co.com.surenvios.librarycommon.dto.internal.ResolucionInterna;
 import org.apache.logging.log4j.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.*;
@@ -12,6 +13,11 @@ import co.com.surenvios.librarycommon.database.view.*;
 import co.com.surenvios.librarycommon.dto.facture.response.common.ResponseFacture;
 import co.com.surenvios.librarycommon.exception.*;
 import co.com.surenvios.librarycommon.util.XmlConverter;
+
+import java.math.BigInteger;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.Optional;
 
 @Component("process")
 public abstract class Process {
@@ -33,35 +39,35 @@ public abstract class Process {
 	@Autowired
 	private AcumuladoEstadoRepository acumuladoEstadoRepository;
 
+	@Autowired
+	private T0400009Repository t0400009Repository;
+
 	public abstract void process(Resolucion resolucion, NumeracionNcNd numeracionNcNd, Emisor emisor,
 			Acumulado acumulado, String tokenFacture);
 
 	public abstract void reprocess(Emisor emisor, Acumulado acumulado, String tokenFacture);
 
-	protected String getNumeroDocumentoFacturaVenta(Resolucion resolucion) throws ExceptionGetNumberDocument {
+	protected ResolucionInterna getNumeroDocumentoFacturaVenta(Resolucion resolucion) throws ExceptionGetNumberDocument {
 		String numeroFactura = "";
 		try {
 			Integer proximoConsecutivo = this.resolucionRepository
 					.findProximoConsecutivo(resolucion.getNumeroResolucion());
-			numeroFactura = resolucion.getPrefijo().concat(String.valueOf(proximoConsecutivo));
+			return new ResolucionInterna(proximoConsecutivo, resolucion);
 		} catch (Exception e) {
 			throw new ExceptionGetNumberDocument("Error en obtener numero consecutivo de documento Resolucion ["
 					.concat(resolucion.getNumeroResolucion()).concat("]"), e);
 		}
-		return numeroFactura;
 	}
 
-	protected String getNumeroDocumentoNcNd(NumeracionNcNd numeracionNcNd) throws ExceptionGetNumberDocument {
-		String numeroFactura = "";
+	protected ResolucionInterna getNumeroDocumentoNcNd(NumeracionNcNd numeracionNcNd) throws ExceptionGetNumberDocument {
 		try {
 			Integer proximoConsecutivo = this.numeracionNcNdRepository
 					.findProximoConsecutivo(numeracionNcNd.getTipoDocumento());
-			numeroFactura = numeracionNcNd.getPrefijo().concat(String.valueOf(proximoConsecutivo));
+			return new ResolucionInterna(proximoConsecutivo, numeracionNcNd);
 		} catch (Exception e) {
 			throw new ExceptionGetNumberDocument("Error en obtener numero consecutivo de documento tipo ["
 					.concat(numeracionNcNd.getTipoDocumento()).concat("]"), e);
 		}
-		return numeroFactura;
 	}
 
 	protected Resolucion findResolucionNumber(String numberDocument) throws ExceptionGetNumberDocument {
@@ -96,16 +102,35 @@ public abstract class Process {
 		}
 	}
 
-	protected void updateNumberDocument(Acumulado acumulado, String numeroFactura, Resolucion resolucion) throws ExceptionSaveEntity {
+	protected void updateNumberDocument(Acumulado acumulado, ResolucionInterna resolucionInterna) throws ExceptionSaveEntity {
 		try {
-			acumulado.setNumeroDocumento(numeroFactura);
+			acumulado.setNumeroDocumento(resolucionInterna.numeroDocumento());
+			acumulado.setFechaDocumento(resolucionInterna.getFechaDocumento());
 			if (acumulado.getTipoDocumento().equals("FV")) {
-				acumulado.setNumeroResolucion(resolucion.getNumeroResolucion());	
+				acumulado.setNumeroResolucion(resolucionInterna.getResolucion().getNumeroResolucion());
 			}
 			this.acumuladoRepository.save(acumulado);
 		} catch (Exception e) {
 			throw new ExceptionSaveEntity(
 					"Error Actualizando numero documento [".concat(acumulado.getNumeroGuia()).concat("]"), e);
+		}
+	}
+
+	protected void updateEntregaDocumento(Acumulado acumulado, ResolucionInterna resolucionInterna) throws ExceptionSaveEntity {
+		try {
+			Calendar calendarNow = Calendar.getInstance();
+			acumulado.setFechaEntrega(calendarNow);
+			this.acumuladoRepository.save(acumulado);
+			Optional<T040009> responseQuery = this.t0400009Repository.findById(new IdT040009("1", acumulado.getNumeroGuia(), 0));
+			T040009 t040009 = responseQuery.get();
+			t040009.setCodRegionalFExterna(1);
+			t040009.setConsFExterna(new BigInteger(String.valueOf(resolucionInterna.getConsecutivo())));
+			t040009.setFecFExterna(calendarNow);
+			t040009.setPrefFactura(resolucionInterna.getPrefijo());
+			this.t0400009Repository.save(t040009);
+		} catch (Exception e) {
+			throw new ExceptionSaveEntity(
+					"Error Actualizando Fecha Entrega [".concat(acumulado.getNumeroGuia()).concat("]"), e);
 		}
 	}
 

@@ -1,5 +1,6 @@
 package co.com.surenvios.billingmasive.process;
 
+import co.com.surenvios.librarycommon.dto.internal.ResolucionInterna;
 import org.apache.logging.log4j.*;
 import org.springframework.stereotype.*;
 
@@ -20,15 +21,16 @@ public class ProcessNotaCredito extends Process {
 			String tokenFacture) {
 		try {
 			NotaCreditoRequest notaCreditoRequest = HelperNota.createNotaCredito(emisor, acumulado, numeracionNcNd);
-			String numeroFactura = this.getNumeroDocumentoNcNd(numeracionNcNd);
-			notaCreditoRequest.getCabecera().setNumeroFactura(numeroFactura);
-			this.updateNumberDocument(acumulado, numeroFactura, resolucion);
+			ResolucionInterna resolucionInterna = this.getNumeroDocumentoNcNd(numeracionNcNd);
+			notaCreditoRequest.getCabecera().setNumeroFactura(resolucionInterna.numeroDocumento());
+			this.updateNumberDocument(acumulado, resolucionInterna);
 			String xml = this.convertXml(notaCreditoRequest);
 			logger.info(xml);
 			ResponseFacture response = this.sendNota(xml, tokenFacture, numeracionNcNd.getPrefijo());
 			this.updateSent(acumulado);
 			this.saveResponseFacture(response);
 			this.updateFinally(acumulado);
+			this.updateEntregaDocumento(acumulado, resolucionInterna);
 		} catch (ExceptionSaveAcumuladoEstado e) {
 			logger.error(e);
 			this.updateFinallyError(acumulado, e);

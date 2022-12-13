@@ -1,5 +1,6 @@
 package co.com.surenvios.billingmasive.process;
 
+import co.com.surenvios.librarycommon.dto.internal.ResolucionInterna;
 import org.apache.logging.log4j.*;
 import org.springframework.stereotype.*;
 
@@ -19,9 +20,9 @@ public class ProcessFacturaVenta extends Process {
 	public void process(Resolucion resolucion, NumeracionNcNd numeracionNcNd, Emisor emisor, Acumulado acumulado, String tokenFacture) {
 		try {
 			FacturaVentaRequest facturaVentaRequest = HelperFacturaVenta.create(resolucion, emisor, acumulado);
-			String numeroFactura = this.getNumeroDocumentoFacturaVenta(resolucion);
-			facturaVentaRequest.getCabecera().setNumeroFactura(numeroFactura);
-			this.updateNumberDocument(acumulado, numeroFactura, resolucion);
+			ResolucionInterna resolucionInterna = this.getNumeroDocumentoFacturaVenta(resolucion);
+			facturaVentaRequest.getCabecera().setNumeroFactura(resolucionInterna.numeroDocumento());
+			this.updateNumberDocument(acumulado, resolucionInterna);
 			String xml = this.convertXml(facturaVentaRequest);
 			logger.info(xml);
 			ResponseFacture facturaVentaResponse = this.sendFacturaVenta(xml, tokenFacture,
@@ -29,6 +30,7 @@ public class ProcessFacturaVenta extends Process {
 			this.updateSent(acumulado);
 			this.saveResponseFacture(facturaVentaResponse);
 			this.updateFinally(acumulado);
+			this.updateEntregaDocumento(acumulado, resolucionInterna);
 		} catch (ExceptionSaveAcumuladoEstado e) {
 			logger.error(e);
 			this.updateFinallyError(acumulado, e);
