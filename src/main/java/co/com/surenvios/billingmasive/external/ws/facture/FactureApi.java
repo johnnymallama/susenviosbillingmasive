@@ -3,6 +3,8 @@ package co.com.surenvios.billingmasive.external.ws.facture;
 import java.net.URI;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,7 @@ import co.com.surenvios.librarycommon.exception.*;
 @Component("factureApi")
 public class FactureApi {
 
+	private static final Logger logger = LogManager.getLogger(FactureApi.class);
 	private static final String MSG_CREDENTIAL = "Error en credenciales de acceso.";
 
 	private static final String HEAD_REQUEST_ID = "REQUEST-ID";
@@ -56,6 +59,7 @@ public class FactureApi {
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
+			headers.add(HEAD_WHO, this.codigoWho);
 			ResponseEntity<String> response = this.sendPost(this.urlLogin, headers,
 					new ObjectMapper().writeValueAsString(loginFactureRequest));
 			switch (response.getStatusCode()) {
@@ -106,8 +110,10 @@ public class FactureApi {
 				throw new ExceptionSend(error.getEventItems().toString());
 			}
 		} catch (ExceptionSend e) {
+			logger.error("ERROR EN sendFacturaVenta UNO", e);
 			throw e;
 		} catch (Exception e) {
+			logger.error("ERROR EN sendFacturaVenta DOS", e);
 			throw new ExceptionSend(e);
 		}
 		return retorno;
@@ -165,12 +171,13 @@ public class FactureApi {
 	}
 
 	private void getResponseError(HttpStatusCodeException e) throws ExceptionSend {
+		logger.error("getResponseError = " + e.getResponseBodyAsString(), e);
 		ErrorFactureResponse error = new Gson().fromJson(e.getResponseBodyAsString(), ErrorFactureResponse.class);
 		for (ErrorFactureResponse.EventItem eventItem : error.getEventItems()) {
 			if (eventItem.getDetailDescription() != null) {
-				throw new ExceptionSend(error.getEventItems().get(0).getDetailDescription().get(0));
+				throw new ExceptionSend(error.getEventItems().get(0).getDetailDescription().get(0), e);
 			} else {
-				throw new ExceptionSend(error.getEventItems().get(0).getShortDescription());
+				throw new ExceptionSend(error.getEventItems().get(0).getShortDescription(), e);
 			}
 		}
 	}

@@ -49,6 +49,8 @@ public class ProcessFacturaVenta extends Process {
 	public void reprocess(Emisor emisor, Acumulado acumulado, String tokenFacture) {
 		try {
 			Resolucion resolucion = this.findResolucionNumber(acumulado.getNumeroDocumento());
+			Integer consecutivo = Integer.parseInt(acumulado.getNumeroDocumento().split(resolucion.getPrefijo())[1]);
+			ResolucionInterna resolucionInterna = new ResolucionInterna(consecutivo, resolucion);
 			FacturaVentaRequest facturaVentaRequest = HelperFacturaVenta.create(resolucion, emisor, acumulado);
 			facturaVentaRequest.getCabecera().setNumeroFactura(acumulado.getNumeroDocumento());
 			String xml = this.convertXml(facturaVentaRequest);
@@ -58,6 +60,7 @@ public class ProcessFacturaVenta extends Process {
 			this.updateSent(acumulado);
 			this.saveResponseFacture(facturaVentaResponse);
 			this.updateFinally(acumulado);
+			this.updateEntregaDocumento(acumulado, resolucionInterna);
 		} catch (ExceptionSaveAcumuladoEstado e) {
 			logger.error(e);
 			this.updateFinallyError(acumulado, e);
