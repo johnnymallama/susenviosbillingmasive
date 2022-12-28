@@ -1,109 +1,45 @@
 <!DOCTYPE html>
 <head>
-    <title>Insecure Web Application</title>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://getbootstrap.com/examples/sticky-footer-navbar/sticky-footer-navbar.css">
-    <link rel="stylesheet" href="css/Bicim.css">
-    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet" id="bootstrap-css">
-
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://getbootstrap.com/docs/5.2/assets/css/docs.css" rel="stylesheet">
+    <title>XUE Facturacion Electronica</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
-<body >
-
+<body class="p-3 ">
 
 <div class="well" style="background-color:#563D7C; color: #FFFFFF; margin-left: 0px; border-left-width: 2px;
         border-left-color: #191906; border-right-width: 2px; border-right-color: #191906">
-
-    <h2 style="text-align: left">Insecure Web Application</h2>
+    <h2 style="text-align: left">XUE Facturación Electronica</h2>
     <p class="lead"></p>
 </div>
 
-<div class="container" id="container">
-    <h4 > <a id="lecture1">Web Basics</a></h4>
-    <h4 >Form based Authentication <a id="lecture2">Dashboard</a> </h4>
-    <h4 >Form based Authentication<a id="login">LoginForm</a></h4>
-    <h4 >Form based Authentication<a id="logout">Logout</a></h4>
-</div> <!-- /container -->
-
-
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-
-
-
-<script   type="text/javascript">
-    $(document).ready(function()
-    {   // Synchronous Communication
-        $("#lecture1").click(function()
-        {
-            window.location = '/examples';
-            return false;
-        });
-
-        // Asynchronous Communication
-        $("#lecture2").click(function()
-        {
-            $.ajax({
-                url: '/dashboard',
-                type: 'GET',
-                //data: form_data,
-                success: function(msg)
-                {
-                    // $("#listele").slideDown("500");
-                    $("#container").html(msg).fadeIn("slow");//.fadeOut("slow");
-                },
-                error: function()
-                {
-                    alert("Hata meydana geldi. Lütfen tekrar deneyiniz !!!");
-                }
-
-            });
-
-        });
-        // Asynchronous Communication
-        $("#login").click(function()
-        {
-            $.ajax({
-                url: '/loginpage',
-                type: 'GET',
-                //data: form_data,
-                success: function(msg)
-                {
-                    // $("#listele").slideDown("500");
-                    $("#container").html(msg).fadeIn("slow");//.fadeOut("slow");
-                },
-                error: function()
-                {
-                    alert("Hata meydana geldi. Lütfen tekrar deneyiniz !!!");
-                }
-
-            });
-        });
-        $("#logout").click(function()
-        {
-            $.ajax({
-                url: '/logout',
-                type: 'GET',
-                //data: form_data,
-                success: function(msg)
-                {
-                   alert("you logged out")
-                    //$("#container").html(msg).fadeIn("slow");//.fadeOut("slow");
-                },
-                error: function()
-                {
-                    alert("Hata meydana geldi. Lütfen tekrar deneyiniz !!!");
-                }
-
-            });
-        });
-    });
-</script>
-
-
+<div class="container text-center">
+    <h1>Estado Facturación</h1>
+    <div class="row p-1">
+        <div class="col">
+            <div class="p-3 border bg-light">Individual Activo</div>
+        </div>
+        <div class="col">
+            <div class="p-3 border bg-light">Reproceso Activo</div>
+        </div>
+    </div>
+    <div class="row p-1">
+        <div class="col">
+            <button type="button" class="btn btn-success btn-lg">Iniciar</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-danger btn-lg">Detener</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-success btn-lg">Iniciar</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-danger btn-lg">Detener</button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

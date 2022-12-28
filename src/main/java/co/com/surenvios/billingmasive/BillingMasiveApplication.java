@@ -32,13 +32,24 @@ public class BillingMasiveApplication implements ApplicationRunner {
 		SpringApplication.run(BillingMasiveApplication.class, args);
 	}
 
-	@Bean(name = "threadTaskExecutor")
-	public ThreadPoolTaskExecutor threadTaskExecutor() {
+	@Bean(name = "threadTaskExecutorProcess")
+	public ThreadPoolTaskExecutor threadTaskExecutorProcess() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.setCorePoolSize(this.countThread);
 		executor.setMaxPoolSize(this.countThread);
 		executor.setQueueCapacity(0);
-		executor.setThreadNamePrefix("MASIVE-");
+		executor.setThreadNamePrefix("PROCESS-");
+		executor.initialize();
+		return executor;
+	}
+
+	@Bean(name = "threadTaskExecutorReprocess")
+	public ThreadPoolTaskExecutor threadTaskExecutorReprocess() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		executor.setCorePoolSize(this.countThread);
+		executor.setMaxPoolSize(this.countThread);
+		executor.setQueueCapacity(0);
+		executor.setThreadNamePrefix("REPROCESS-");
 		executor.initialize();
 		return executor;
 	}

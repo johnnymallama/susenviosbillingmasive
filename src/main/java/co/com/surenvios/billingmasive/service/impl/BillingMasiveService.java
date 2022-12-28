@@ -6,7 +6,6 @@ import org.apache.logging.log4j.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.Service;
 
-import co.com.surenvios.billingmasive.scheduler.SchedulerFacture;
 import co.com.surenvios.billingmasive.service.IBillingMasiveService;
 import co.com.surenvios.librarycommon.exception.*;
 

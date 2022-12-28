@@ -17,7 +17,7 @@ public interface AcumuladoRepository extends CrudRepository<Acumulado, Integer> 
 	@Query("SELECT a FROM Acumulado a WHERE a.procesar = 0 AND (a.numeroDocumento IS NULL OR a.numeroDocumento = '')")
 	public List<Acumulado> findDocumentoProcess();
 	
-	@Query("SELECT a FROM Acumulado a WHERE a.procesar = 0 AND a.estadoDocumento = 3 AND a.numeroDocumento IS NOT NULL")
+	@Query("SELECT a FROM Acumulado a WHERE a.procesar = 0 AND a.estadoDocumento = 4 AND a.numeroDocumento IS NOT NULL")
 	public List<Acumulado> findDocumentoReprocess();
 
 }

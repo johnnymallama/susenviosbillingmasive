@@ -12,7 +12,7 @@ import co.com.surenvios.librarycommon.database.entity.Ejecucion;
 @Repository("ejecucionRepository")
 public interface EjecucionRepository extends CrudRepository<Ejecucion, Integer> {
 	
-	@Query(nativeQuery = true, value = "SELECT count(1) FROM DBO.FE_EJECUCION fe where fe.fecha_fin IS NULL")
-	public Integer findThreadExecuting();
+	@Query(nativeQuery = true, value = "SELECT count(1) FROM DBO.FE_EJECUCION fe where fe.fecha_fin IS NULL AND fe.id_hilo LIKE %:prefixHilo%")
+	public Integer findThreadExecuting(String prefixHilo);
 
 }

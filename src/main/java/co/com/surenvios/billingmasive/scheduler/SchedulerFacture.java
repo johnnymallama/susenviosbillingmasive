@@ -3,11 +3,9 @@ package co.com.surenvios.billingmasive.scheduler;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.logging.log4j.*;
+import co.com.surenvios.billingmasive.util.LogUtil;
 import org.springframework.beans.factory.annotation.*;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import co.com.surenvios.billingmasive.external.ws.facture.*;
@@ -81,6 +79,7 @@ public class SchedulerFacture {
         LoginFactureResponse loginFactureResponse = this.factureApi.login(loginFactureRequest);
         return loginFactureResponse.getAccessToken();
     }
+
     @Cacheable("emisor")
     protected Emisor findEmisor() throws ExceptionGeneral {
         Emisor retorno = null;
@@ -96,10 +95,10 @@ public class SchedulerFacture {
         return retorno;
     }
 
-    protected void validExecutionThread() throws ExceptionScheduled {
-        Integer hiloEjecucion = this.ejecucionRepository.findThreadExecuting();
+    protected void validExecutionThread(String prefixHilo) throws ExceptionScheduled {
+        Integer hiloEjecucion = this.ejecucionRepository.findThreadExecuting(prefixHilo);
         if (hiloEjecucion > 0) {
-            throw new ExceptionScheduled("Hilos en ejecucion");
+            throw new ExceptionScheduled(String.format("Hilos [%s] en ejecucion [%d]", prefixHilo, hiloEjecucion));
         }
     }
 
@@ -133,6 +132,8 @@ public class SchedulerFacture {
     }
 
     private void sendProcessDocument(boolean typeDocument, List<Acumulado> subList) throws ExceptionLogin, ExceptionGeneral {
+        String message = String.format("[typeDocument]= %1b, [sizeList]= %2d", typeDocument, subList.size());
+        LogUtil.trackInfo("SchedulerFacture.sendProcessDocument", message);
         if (typeDocument) {
             this.processDocument.run(subList, generateToken(), findResolutionVigent(), findEmisor(), findResolucionNcNdVigent());
         } else {
