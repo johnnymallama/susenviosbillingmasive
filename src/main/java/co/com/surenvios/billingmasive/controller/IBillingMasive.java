@@ -1,5 +1,6 @@
 package co.com.surenvios.billingmasive.controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,5 +19,8 @@ public interface IBillingMasive {
 
 	@GetMapping(path = "/stopReprocess")
 	public ResponseEntity<String> stopReprocess();
+
+	@GetMapping(path = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> statusProcess();
 
 }

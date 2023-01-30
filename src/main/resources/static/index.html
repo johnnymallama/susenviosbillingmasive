@@ -14,67 +14,114 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
 
 <script type="text/javascript">
-        $(document).ready(function() {
-            $("#diarioStart").click(function() {
-                $.ajax({
-                    url: '/billing-masive/v1/masive/start',
-                    type: 'GET',
-                    dataType: "json",
-                    success: function(data) {
-                        if (data) {
-                            $("#diarioActivo").removeClass("invisible");
-                            $("#diarioInactivo").removeClass("invisible");
-                            $("#diarioActivo").removeClass("visible");
-                            $("#diarioInactivo").removeClass("visible");
-                            $("#diarioActivo").addClass("visible");
-                            $("#diarioInactivo").addClass("invisible");
-                        } else {
-                            $("#diarioActivo").removeClass("invisible");
-                            $("#diarioInactivo").removeClass("invisible");
-                            $("#diarioActivo").removeClass("visible");
-                            $("#diarioInactivo").removeClass("visible");
-                            $("#diarioActivo").addClass("invisible");
-                            $("#diarioInactivo").addClass("visible");
-                        }
-                    },
-                    error: function(error)
-                    {
-                        alert("Error Iniciando proceso diario");
-                    }
-                });
-            });
-
-            $("#diarioStop").click(function() {
-                $.ajax({
-                    url: '/billing-masive/v1/masive/stop',
-                    type: 'GET',
-                    dataType: "json",
-                    success: function(data) {
-                        if (data) {
-                            $("#diarioActivo").removeClass("invisible");
-                            $("#diarioInactivo").removeClass("invisible");
-                            $("#diarioActivo").removeClass("visible");
-                            $("#diarioInactivo").removeClass("visible");
-                            $("#diarioActivo").addClass("invisible");
-                            $("#diarioInactivo").addClass("visible");
-                        } else {
-                            $("#diarioActivo").removeClass("invisible");
-                            $("#diarioInactivo").removeClass("invisible");
-                            $("#diarioActivo").removeClass("visible");
-                            $("#diarioInactivo").removeClass("visible");
-                            $("#diarioActivo").addClass("invisible");
-                            $("#diarioInactivo").addClass("visible");
-                        }
-                    },
-                    error: function(error) {
-                        alert("Error Deteniendo proceso diario");
-                    }
-                });
+    $(document).ready(function() {
+        init();
+        $("#diarioStart").click(function() {
+            $.ajax({
+                url: '/billing-masive/v1/masive/start',
+                type: 'GET',
+                dataType: "json",
+                success: function(data) {
+                    visibleProcess(data);
+                },
+                error: function(error)
+                {
+                    alert("Error Iniciando proceso diario");
+                }
             });
         });
-    </script>
 
-<div class="container text-center text-primary" >
+        $("#reprocesoStart").click(function() {
+            $.ajax({
+                url: '/billing-masive/v1/masive/startReprocess',
+                type: 'GET',
+                dataType: "json",
+                success: function(data) {
+                    visibleReprocess(data);
+                },
+                error: function(error)
+                {
+                    alert("Error Iniciando proceso diario");
+                }
+            });
+        });
+
+        $("#diarioStop").click(function() {
+            $.ajax({
+                url: '/billing-masive/v1/masive/stop',
+                type: 'GET',
+                dataType: "json",
+                success: function(data) {
+                    visibleProcess(!data);
+                },
+                error: function(error) {
+                    alert("Error Deteniendo proceso diario");
+                }
+            });
+        });
+
+        $("#reprocesoStop").click(function() {
+            $.ajax({
+                url: '/billing-masive/v1/masive/stopReprocess',
+                type: 'GET',
+                dataType: "json",
+                success: function(data) {
+                    visibleReprocess(!data);
+                },
+                error: function(error) {
+                    alert("Error Deteniendo proceso diario");
+                }
+            });
+        });
+    });
+
+    function init(){
+        $.ajax({
+            url: '/billing-masive/v1/masive/status',
+            type: 'GET',
+            dataType: "json",
+            success: function(data) {
+                visibleReprocess(data.statusReprocess);
+                visibleProcess(data.statusProcess);
+            },
+            error: function(error) {
+                alert(error);
+            }
+        });
+    }
+
+    function visibleProcess(status){
+        $("#diarioActivo").removeClass("invisible");
+        $("#diarioInactivo").removeClass("invisible");
+        $("#diarioActivo").removeClass("visible");
+        $("#diarioInactivo").removeClass("visible");
+        if (status) {
+            $("#diarioActivo").addClass("visible");
+            $("#diarioInactivo").addClass("invisible");
+        } else {
+            $("#diarioActivo").addClass("invisible");
+            $("#diarioInactivo").addClass("visible");
+        }
+    }
+
+    function visibleReprocess(status){
+        $("#reprocesoActivo").removeClass("invisible");
+            $("#reprocesoInactivo").removeClass("invisible");
+            $("#reprocesoActivo").removeClass("visible");
+            $("#reprocesoInactivo").removeClass("visible");
+        if (status) {
+            $("#reprocesoActivo").addClass("visible");
+            $("#reprocesoInactivo").addClass("invisible");
+        } else {
+            $("#reprocesoActivo").addClass("invisible");
+            $("#reprocesoInactivo").addClass("visible");
+        }
+    }
+
+
+</script>
+
+<div class="container text-center text-primary">
     <h1>XUE Facturación Electronica</h1>
 </div>
 
@@ -83,10 +130,11 @@
     <div class="row p-1">
         <div class="col">
             <div id="diarioActivo" class="p-3 border bg-success bg-opacity-25 invisible">Diario Activo</div>
-            <div id="diarioInactivo" class="p-3 border bg-danger bg-opacity-25 invisible">Diario Inactivo</div>
+            <div id="diarioInactivo" class="p-3 border bg-danger bg-opacity-25">Diario Inactivo</div>
         </div>
         <div class="col">
-            <div class="p-3 border bg-danger bg-opacity-25">Reproceso Inactivo</div>
+            <div id="reprocesoActivo" class="p-3 border bg-success bg-opacity-25 invisible">Reproceso Activo</div>
+            <div id="reprocesoInactivo" class="p-3 border bg-danger bg-opacity-25">Reproceso Inactivo</div>
         </div>
     </div>
     <div class="row p-1">
@@ -97,13 +145,55 @@
             <button id="diarioStop" type="button" class="btn btn-outline-danger btn-lg">Detener</button>
         </div>
         <div class="col d-grid">
-            <button type="button" class="btn btn-outline-success btn-lg">Iniciar</button>
+            <button id="reprocesoStart" type="button" class="btn btn-outline-success btn-lg">Iniciar</button>
         </div>
         <div class="col d-grid">
-            <button type="button" class="btn btn-outline-danger btn-lg">Detener</button>
+            <button id="reprocesoStop" type="button" class="btn btn-outline-danger btn-lg">Detener</button>
         </div>
     </div>
 </div>
-
+<br>
+<!--
+<div class="container">
+    <h2>Resoluciones</h2>
+    <div class="row p-1">
+        <table id="tableResolucion" class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Empresa</th>
+                    <th scope="col">Número Resolución</th>
+                    <th scope="col">Consecutivo Proximo</th>
+                    <th scope="col">Consecutivo Inicial</th>
+                    <th scope="col">Consecutivo Final</th>
+                    <th scope="col">Fecha Fin</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Susenvios</td>
+                    <td>123456</td>
+                    <td>123456</td>
+                    <td>123456</td>
+                    <td>7890</td>
+                    <td>2023-12-31</td>
+                </tr>
+                <tr>
+                    <td>Surenvios</td>
+                    <td>123456</td>
+                    <td>123456</td>
+                    <td>123456</td>
+                    <td>7890</td>
+                    <td>2023-12-31</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="row">
+        <div class="col">
+            <button id="agregarResolucion" type="button" class="btn btn-outline-info">Agregar Resolución</button>
+        </div>
+    </div>
+</div>
+-->
 </body>
 </html>
