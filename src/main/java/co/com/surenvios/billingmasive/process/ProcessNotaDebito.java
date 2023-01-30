@@ -53,8 +53,9 @@ public class ProcessNotaDebito extends Process {
     @Override
     public void reprocess(Emisor emisor, Acumulado acumulado, String tokenFacture) {
         try {
-            NumeracionNcNd numeracionNcNd = this.findNumeracionNcNdNumber(acumulado.getNumeroDocumento());
-            ResolucionInterna resolucionInterna = this.getNumeroDocumentoNcNd(numeracionNcNd);
+            NumeracionNcNd numeracionNcNd = this.findNumeracionNcNdNumber(acumulado.getNumeroDocumento(), acumulado.getOrigen());
+            Integer consecutivo = Integer.parseInt(acumulado.getNumeroDocumento().split(numeracionNcNd.getPrefijo())[1]);
+            ResolucionInterna resolucionInterna = new ResolucionInterna(consecutivo, numeracionNcNd);
             NotaDebitoRequest notaDebitoRequest = HelperNota.createNotaDebito(emisor, acumulado, numeracionNcNd);
             notaDebitoRequest.getCabecera().setNumeroFactura(acumulado.getNumeroDocumento());
             String xml = this.convertXml(notaDebitoRequest);

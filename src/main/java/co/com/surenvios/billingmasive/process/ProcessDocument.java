@@ -13,6 +13,9 @@ import co.com.surenvios.librarycommon.database.view.*;
 import co.com.surenvios.librarycommon.exception.*;
 
 import static co.com.surenvios.billingmasive.util.LogUtil.trackError;
+import static co.com.surenvios.billingmasive.util.Constants.FACTURA_VENTA;
+import static co.com.surenvios.billingmasive.util.Constants.NOTA_CREDITO;
+import static co.com.surenvios.billingmasive.util.Constants.NOTA_DEBITO;
 
 
 @Component
@@ -46,24 +49,24 @@ public class ProcessDocument {
                                          List<NumeracionNcNd> listNumeracionNcNd) {
         try {
             switch (acumulado.getTipoDocumento()) {
-                case "FV":
+                case FACTURA_VENTA:
                     this.processFacturaVenta.updateInProcessing(acumulado);
                     this.processFacturaVenta.process(resolucion, null, emisor, acumulado, tokenFacture);
                     break;
-                case "CV":
+                case NOTA_CREDITO:
                     NumeracionNcNd numeracionNc = null;
                     Optional<NumeracionNcNd> optionalNc = listNumeracionNcNd.stream()
-                            .filter(numeracion -> numeracion.getTipoDocumento().equals("CV")).findFirst();
+                            .filter(numeracion -> numeracion.getTipoDocumento().equals(NOTA_CREDITO)).findFirst();
                     if (optionalNc.isPresent()) {
                         numeracionNc = optionalNc.get();
                     }
                     this.processNotaCredito.updateInProcessing(acumulado);
                     this.processNotaCredito.process(resolucion, numeracionNc, emisor, acumulado, tokenFacture);
                     break;
-                case "DV":
+                case NOTA_DEBITO:
                     NumeracionNcNd numeracionNd = null;
                     Optional<NumeracionNcNd> optionalNd = listNumeracionNcNd.stream()
-                            .filter(numeracion -> numeracion.getTipoDocumento().equals("DV")).findFirst();
+                            .filter(numeracion -> numeracion.getTipoDocumento().equals(NOTA_DEBITO)).findFirst();
                     if (optionalNd.isPresent()) {
                         numeracionNd = optionalNd.get();
                     }
@@ -92,14 +95,14 @@ public class ProcessDocument {
         for (Acumulado acumulado : listAcumulado) {
             try {
                 switch (acumulado.getTipoDocumento()) {
-                    case "FV":
+                    case FACTURA_VENTA:
                         this.processFacturaVenta.updateInProcessing(acumulado);
                         this.processFacturaVenta.reprocess(emisor, acumulado, tokenFacture);
                         break;
-                    case "CV":
+                    case NOTA_CREDITO:
                         this.processNotaCredito.reprocess(emisor, acumulado, tokenFacture);
                         break;
-                    case "DV":
+                    case NOTA_DEBITO:
                         this.processNotaDebito.updateInProcessing(acumulado);
                         this.processNotaDebito.reprocess(emisor, acumulado, tokenFacture);
                         break;

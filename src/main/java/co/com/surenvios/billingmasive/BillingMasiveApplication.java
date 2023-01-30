@@ -13,8 +13,12 @@ import org.springframework.context.annotation.*;
 import org.springframework.scheduling.annotation.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import static co.com.surenvios.billingmasive.util.Constants.PREFIX_NAME_THREAD_PROCESS;
+import static co.com.surenvios.billingmasive.util.Constants.PREFIX_NAME_THREAD_REPROCESS;
+import static co.com.surenvios.billingmasive.util.Constants.createNameThread;
+
 @SpringBootApplication
-@ComponentScan({ "co.com.surenvios.billingmasive" })
+@ComponentScan({"co.com.surenvios.billingmasive"})
 @EntityScan("co.com.surenvios.librarycommon.database")
 @Configuration
 @EnableAutoConfiguration
@@ -22,47 +26,50 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 @EnableCaching
 public class BillingMasiveApplication implements ApplicationRunner {
-	
-	private static final Logger logger = LogManager.getLogger(BillingMasiveApplication.class);
-	
-	@Value("${count.thread}")
-	private Integer countThread;
 
-	public static void main(String[] args) {
-		SpringApplication.run(BillingMasiveApplication.class, args);
-	}
+    private static final Logger logger = LogManager.getLogger(BillingMasiveApplication.class);
 
-	@Bean(name = "threadTaskExecutorProcess")
-	public ThreadPoolTaskExecutor threadTaskExecutorProcess() {
-		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(this.countThread);
-		executor.setMaxPoolSize(this.countThread);
-		executor.setQueueCapacity(0);
-		executor.setThreadNamePrefix("PROCESS-");
-		executor.initialize();
-		return executor;
-	}
+    @Value("${count.thread}")
+    private Integer countThread;
 
-	@Bean(name = "threadTaskExecutorReprocess")
-	public ThreadPoolTaskExecutor threadTaskExecutorReprocess() {
-		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(this.countThread);
-		executor.setMaxPoolSize(this.countThread);
-		executor.setQueueCapacity(0);
-		executor.setThreadNamePrefix("REPROCESS-");
-		executor.initialize();
-		return executor;
-	}
+    @Value("${origen.data.xue}")
+    private String origen;
 
-	@Bean(name = "cacheProcess")
-	public CacheManager cacheManager(){
-		String[] cachables = {"token", "emisor"};
-		return new ConcurrentMapCacheManager(cachables);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BillingMasiveApplication.class, args);
+    }
 
-	@Override
-	public void run(ApplicationArguments args) throws Exception {
-		logger.info("BillingMasiveApplication_::run");
-	}
+    @Bean(name = "threadTaskExecutorProcess")
+    public ThreadPoolTaskExecutor threadTaskExecutorProcess() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(this.countThread);
+        executor.setMaxPoolSize(this.countThread);
+        executor.setQueueCapacity(0);
+        executor.setThreadNamePrefix(createNameThread(PREFIX_NAME_THREAD_PROCESS, this.origen));
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "threadTaskExecutorReprocess")
+    public ThreadPoolTaskExecutor threadTaskExecutorReprocess() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(this.countThread);
+        executor.setMaxPoolSize(this.countThread);
+        executor.setQueueCapacity(0);
+        executor.setThreadNamePrefix(createNameThread(PREFIX_NAME_THREAD_REPROCESS, this.origen));
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "cacheProcess")
+    public CacheManager cacheManager() {
+        String[] cachables = {"token", "emisor"};
+        return new ConcurrentMapCacheManager(cachables);
+    }
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        logger.info("BillingMasiveApplication_::run");
+    }
 
 }

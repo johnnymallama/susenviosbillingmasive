@@ -14,13 +14,13 @@ import co.com.surenvios.librarycommon.database.entity.Resolucion;
 @Repository("resolucionRepository")
 public interface ResolucionRepository extends CrudRepository<Resolucion, String> {
 
-	@Query("SELECT a FROM Resolucion a WHERE a.estado = 1")
-	public Resolucion findResolucionActive();
+	@Query("SELECT a FROM Resolucion a WHERE a.estado = 1 AND a.origen = ?1")
+	public Resolucion findResolucionActive(String origen);
 
 	@Procedure(name = "Resolucion.ProximaConsecutivoResolucion")
-	public Integer findProximoConsecutivo(@Param("pi_Numero_Resolucion") String numeroResolucion);
+	public Integer findProximoConsecutivo(@Param("pi_Numero_Resolucion") String numeroResolucion, @Param("pi_Origen") String origen);
 
-	@Query(nativeQuery = true, value = "SELECT a.* FROM FE_RESOLUCION a WHERE a.prefijo = SUBSTRING(?1,0,LEN(a.prefijo)+1) and CAST(SUBSTRING(?1,LEN(a.prefijo) + 1 ,LEN(?1)) as Integer) BETWEEN a.consecutivo_inicial and a.consecutivo_final AND a.estado = 1")
-	public Resolucion findResolucionNumber(String numberDocument);
+	@Query(nativeQuery = true, value = "SELECT a.* FROM FE_RESOLUCION a WHERE a.prefijo = SUBSTRING(?1,0,LEN(a.prefijo)+1) and CAST(SUBSTRING(?1,LEN(a.prefijo) + 1 ,LEN(?1)) as Integer) BETWEEN a.consecutivo_inicial and a.consecutivo_final AND a.estado = 1 AND a.Origen = ?2")
+	public Resolucion findResolucionNumber(String numberDocument, String origen);
 
 }

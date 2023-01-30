@@ -1,6 +1,7 @@
 package co.com.surenvios.billingmasive.process;
 
 
+import co.com.surenvios.billingmasive.util.Constants;
 import co.com.surenvios.librarycommon.dto.internal.ResolucionInterna;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.*;
@@ -19,6 +20,12 @@ import java.util.Calendar;
 import java.util.Optional;
 
 import static co.com.surenvios.billingmasive.util.LogUtil.trackError;
+import static co.com.surenvios.librarycommon.enume.EstadoProcesar.NO_PROCESADO;
+import static co.com.surenvios.librarycommon.enume.EstadoProcesar.EN_PROCESO;
+import static co.com.surenvios.librarycommon.enume.EstadoProcesar.PROCESADO;
+import static co.com.surenvios.librarycommon.enume.EstadoDocumento.ENVIADO;
+import static co.com.surenvios.librarycommon.enume.EstadoDocumento.EXITOSA;
+import static co.com.surenvios.librarycommon.enume.EstadoDocumento.ERROR;
 
 @Component("process")
 public abstract class Process {
@@ -48,10 +55,10 @@ public abstract class Process {
 
     public abstract void reprocess(Emisor emisor, Acumulado acumulado, String tokenFacture);
 
-    protected ResolucionInterna getNumeroDocumentoFacturaVenta(Resolucion resolucion) throws ExceptionGetNumberDocument {
+    protected ResolucionInterna getNumeroDocumentoFacturaVenta(Resolucion resolucion, String origen) throws ExceptionGetNumberDocument {
         try {
             Integer proximoConsecutivo = this.resolucionRepository
-                    .findProximoConsecutivo(resolucion.getNumeroResolucion());
+                    .findProximoConsecutivo(resolucion.getNumeroResolucion(), origen);
             return new ResolucionInterna(proximoConsecutivo, resolucion);
         } catch (Exception e) {
             throw new ExceptionGetNumberDocument("Error en obtener numero consecutivo de documento Resolucion ["
@@ -62,7 +69,7 @@ public abstract class Process {
     protected ResolucionInterna getNumeroDocumentoNcNd(NumeracionNcNd numeracionNcNd) throws ExceptionGetNumberDocument {
         try {
             Integer proximoConsecutivo = this.numeracionNcNdRepository
-                    .findProximoConsecutivo(numeracionNcNd.getTipoDocumento());
+                    .findProximoConsecutivo(numeracionNcNd.getTipoDocumento(), numeracionNcNd.getOrigen());
             return new ResolucionInterna(proximoConsecutivo, numeracionNcNd);
         } catch (Exception e) {
             throw new ExceptionGetNumberDocument("Error en obtener numero consecutivo de documento tipo ["
@@ -70,18 +77,18 @@ public abstract class Process {
         }
     }
 
-    protected Resolucion findResolucionNumber(String numberDocument) throws ExceptionGetNumberDocument {
+    protected Resolucion findResolucionNumber(String numberDocument, String origen) throws ExceptionGetNumberDocument {
         try {
-            return this.resolucionRepository.findResolucionNumber(numberDocument);
+            return this.resolucionRepository.findResolucionNumber(numberDocument, origen);
         } catch (Exception e) {
             throw new ExceptionGetNumberDocument(
                     "Error en obtener resolucion para numero de documento [".concat(numberDocument).concat("]"), e);
         }
     }
 
-    protected NumeracionNcNd findNumeracionNcNdNumber(String numberDocument) throws ExceptionGetNumberDocument {
+    protected NumeracionNcNd findNumeracionNcNdNumber(String numberDocument, String origen) throws ExceptionGetNumberDocument {
         try {
-            return this.numeracionNcNdRepository.findNumeracionNcNdNumberDocument(numberDocument);
+            return this.numeracionNcNdRepository.findNumeracionNcNdNumberDocument(numberDocument, origen);
         } catch (Exception e) {
             throw new ExceptionGetNumberDocument(
                     "Error en obtener Numeracion Nota para numero de documento [".concat(numberDocument).concat("]"),
@@ -91,7 +98,7 @@ public abstract class Process {
 
     protected void updateRollbackInProcessing(Acumulado acumulado) {
         try {
-            acumulado.setProcesar(0);
+            acumulado.setProcesar(NO_PROCESADO.getCodigo());
             this.acumuladoRepository.save(acumulado);
         } catch (Exception e) {
             String message = String.format(MESSSAGE_ERROR, acumulado.getNumeroDocumento(), e.getMessage());
@@ -103,7 +110,7 @@ public abstract class Process {
         try {
             acumulado.setNumeroDocumento(resolucionInterna.numeroDocumento());
             acumulado.setFechaDocumento(resolucionInterna.getFechaDocumento());
-            if (acumulado.getTipoDocumento().equals("FV")) {
+            if (acumulado.getTipoDocumento().equals(Constants.FACTURA_VENTA)) {
                 acumulado.setNumeroResolucion(resolucionInterna.getResolucion().getNumeroResolucion());
             }
             this.acumuladoRepository.save(acumulado);
@@ -139,8 +146,8 @@ public abstract class Process {
 
     protected void updateErrorAcumulado(Acumulado acumulado, Throwable error) {
         try {
-            acumulado.setProcesar(0);
-            acumulado.setEstadoDocumento(3);
+            acumulado.setProcesar(NO_PROCESADO.getCodigo());
+            acumulado.setEstadoDocumento(ERROR.getCodigo());
             acumulado.setDescripcionEstadoDocumento(error.getMessage());
             this.acumuladoRepository.save(acumulado);
         } catch (Exception e) {
@@ -151,7 +158,7 @@ public abstract class Process {
 
     protected void updateSent(Acumulado acumulado) throws ExceptionSaveEntity {
         try {
-            acumulado.setEstadoDocumento(1);
+            acumulado.setEstadoDocumento(ENVIADO.getCodigo());
             this.acumuladoRepository.save(acumulado);
         } catch (Exception e) {
             throw new ExceptionSaveEntity(
@@ -171,8 +178,8 @@ public abstract class Process {
 
     protected void updateFinallyError(Acumulado acumulado, Throwable error) {
         try {
-            acumulado.setProcesar(2);
-            acumulado.setEstadoDocumento(3);
+            acumulado.setProcesar(PROCESADO.getCodigo());
+            acumulado.setEstadoDocumento(ERROR.getCodigo());
             acumulado.setDescripcionEstadoDocumento(error.getMessage());
             this.acumuladoRepository.save(acumulado);
         } catch (Exception e) {
@@ -183,8 +190,8 @@ public abstract class Process {
 
     protected void updateFinally(Acumulado acumulado) throws ExceptionSaveEntity {
         try {
-            acumulado.setProcesar(2);
-            acumulado.setEstadoDocumento(2);
+            acumulado.setProcesar(PROCESADO.getCodigo());
+            acumulado.setEstadoDocumento(EXITOSA.getCodigo());
             this.acumuladoRepository.save(acumulado);
         } catch (Exception e) {
             throw new ExceptionSaveEntity(
@@ -194,7 +201,7 @@ public abstract class Process {
 
     public void updateInProcessing(Acumulado acumulado) throws ExceptionGeneral {
         try {
-            acumulado.setProcesar(1);
+            acumulado.setProcesar(EN_PROCESO.getCodigo());
             this.acumuladoRepository.save(acumulado);
         } catch (Exception e) {
             throw new ExceptionGeneral(

@@ -1,6 +1,5 @@
 package co.com.surenvios.billingmasive.scheduler;
 
-import java.util.Iterator;
 import java.util.List;
 
 import co.com.surenvios.billingmasive.util.LogUtil;
@@ -81,18 +80,12 @@ public class SchedulerFacture {
     }
 
     @Cacheable("emisor")
-    protected Emisor findEmisor() throws ExceptionGeneral {
-        Emisor retorno = null;
+    protected Emisor findEmisor(String origen) throws ExceptionGeneral {
         try {
-            Iterable<Emisor> iterableEmisor = this.emisorRepository.findAll();
-            Iterator<Emisor> iterator = iterableEmisor.iterator();
-            while (iterator.hasNext() && retorno == null) {
-                retorno = iterator.next();
-            }
+            return this.emisorRepository.findEmisorByOrigen(origen);
         } catch (Exception e) {
             throw new ExceptionGeneral("Error consultando Emisor.", e);
         }
-        return retorno;
     }
 
     protected void validExecutionThread(String prefixHilo) throws ExceptionScheduled {
@@ -102,42 +95,42 @@ public class SchedulerFacture {
         }
     }
 
-    protected Resolucion findResolutionVigent() {
-        return this.resolucionRepository.findResolucionActive();
+    protected Resolucion findResolutionVigent(String origen) {
+        return this.resolucionRepository.findResolucionActive(origen);
     }
 
-    protected List<NumeracionNcNd> findResolucionNcNdVigent() {
-        return this.numeracionNcNdRepository.findAllActive();
+    protected List<NumeracionNcNd> findResolucionNcNdVigent(String origen) {
+        return this.numeracionNcNdRepository.findAllActiveByOrigen(origen);
     }
 
-    protected List<Acumulado> findDocumentProcess() {
-        return this.acumuladoRepository.findDocumentoProcess();
+    protected List<Acumulado> findDocumentProcess(String origen) {
+        return this.acumuladoRepository.findDocumentoProcess(origen);
     }
 
-    protected List<Acumulado> findDocumentoReprocess() {
-        return this.acumuladoRepository.findDocumentoReprocess();
+    protected List<Acumulado> findDocumentoReprocess(String origen) {
+        return this.acumuladoRepository.findDocumentoReprocess(origen);
     }
 
-    protected void processDocument(boolean typeDocument, List<Acumulado> listDocumentoProcess) throws ExceptionLogin, ExceptionGeneral {
+    protected void processDocument(boolean typeDocument, List<Acumulado> listDocumentoProcess, String origen) throws ExceptionLogin, ExceptionGeneral {
         int sizeDocument = listDocumentoProcess.size();
         if (sizeDocument > this.maxDocumentSend) {
             for (int i = 0; i < this.countThread; i++) {
                 int from = i == 0 ? 0 : i * this.maxDocumentSend;
                 int to = from + this.maxDocumentSend;
-                sendProcessDocument(typeDocument, listDocumentoProcess.subList(from, to));
+                sendProcessDocument(typeDocument, listDocumentoProcess.subList(from, to), origen);
             }
         } else {
-            sendProcessDocument(typeDocument, listDocumentoProcess);
+            sendProcessDocument(typeDocument, listDocumentoProcess, origen);
         }
     }
 
-    private void sendProcessDocument(boolean typeDocument, List<Acumulado> subList) throws ExceptionLogin, ExceptionGeneral {
+    private void sendProcessDocument(boolean typeDocument, List<Acumulado> subList, String origen) throws ExceptionLogin, ExceptionGeneral {
         String message = String.format("[typeDocument]= %1b, [sizeList]= %2d", typeDocument, subList.size());
         LogUtil.trackInfo("SchedulerFacture.sendProcessDocument", message);
         if (typeDocument) {
-            this.processDocument.run(subList, generateToken(), findResolutionVigent(), findEmisor(), findResolucionNcNdVigent());
+            this.processDocument.run(subList, generateToken(), findResolutionVigent(origen), findEmisor(origen), findResolucionNcNdVigent(origen));
         } else {
-            this.processDocument.runReprocess(subList, generateToken(), findEmisor());
+            this.processDocument.runReprocess(subList, generateToken(), findEmisor(origen));
         }
     }
 

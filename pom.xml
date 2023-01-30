@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>co.com.surenvios</groupId>
 	<artifactId>BillingMasive</artifactId>
-	<version>1.0.0</version>
+	<version>2.0.0</version>
 	<name>BillingMasive</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
@@ -53,7 +53,7 @@
 		<dependency>
 			<groupId>co.com.surenvios</groupId>
 			<artifactId>LibraryCommonEntity</artifactId>
-			<version>1.0.0</version>
+			<version>2.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>

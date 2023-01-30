@@ -24,7 +24,7 @@ public class ProcessFacturaVenta extends Process {
     public void process(Resolucion resolucion, NumeracionNcNd numeracionNcNd, Emisor emisor, Acumulado acumulado, String tokenFacture) {
         try {
             FacturaVentaRequest facturaVentaRequest = HelperFacturaVenta.create(resolucion, emisor, acumulado);
-            ResolucionInterna resolucionInterna = this.getNumeroDocumentoFacturaVenta(resolucion);
+            ResolucionInterna resolucionInterna = this.getNumeroDocumentoFacturaVenta(resolucion, acumulado.getOrigen());
             facturaVentaRequest.getCabecera().setNumeroFactura(resolucionInterna.numeroDocumento());
             this.updateNumberDocument(acumulado, resolucionInterna);
             String xml = this.convertXml(facturaVentaRequest);
@@ -53,7 +53,7 @@ public class ProcessFacturaVenta extends Process {
     @Override
     public void reprocess(Emisor emisor, Acumulado acumulado, String tokenFacture) {
         try {
-            Resolucion resolucion = this.findResolucionNumber(acumulado.getNumeroDocumento());
+            Resolucion resolucion = this.findResolucionNumber(acumulado.getNumeroDocumento(), acumulado.getOrigen());
             Integer consecutivo = Integer.parseInt(acumulado.getNumeroDocumento().split(resolucion.getPrefijo())[1]);
             ResolucionInterna resolucionInterna = new ResolucionInterna(consecutivo, resolucion);
             FacturaVentaRequest facturaVentaRequest = HelperFacturaVenta.create(resolucion, emisor, acumulado);
