@@ -1,5 +1,6 @@
 package co.com.surenvios.billingmasive.process;
 
+import co.com.surenvios.librarycommon.database.view.DataNote;
 import co.com.surenvios.librarycommon.dto.internal.ResolucionInterna;
 import org.springframework.stereotype.*;
 
@@ -24,7 +25,8 @@ public class ProcessNotaCredito extends Process {
     public void process(Resolucion resolucion, NumeracionNcNd numeracionNcNd, Emisor emisor, Acumulado acumulado,
                         String tokenFacture) {
         try {
-            NotaCreditoRequest notaCreditoRequest = HelperNota.createNotaCredito(emisor, acumulado, numeracionNcNd);
+            DataNote dataNote = this.findDataNoteByIdentity(acumulado.getIdFacturaVenta());
+            NotaCreditoRequest notaCreditoRequest = HelperNota.createNotaCredito(emisor, acumulado, numeracionNcNd, dataNote);
             ResolucionInterna resolucionInterna = this.getNumeroDocumentoNcNd(numeracionNcNd);
             notaCreditoRequest.getCabecera().setNumeroFactura(resolucionInterna.numeroDocumento());
             this.updateNumberDocument(acumulado, resolucionInterna);
@@ -54,10 +56,11 @@ public class ProcessNotaCredito extends Process {
     @Override
     public void reprocess(Emisor emisor, Acumulado acumulado, String tokenFacture) {
         try {
+            DataNote dataNote = this.findDataNoteByIdentity(acumulado.getIdFacturaVenta());
             NumeracionNcNd numeracionNcNd = this.findNumeracionNcNdNumber(acumulado.getNumeroDocumento(), acumulado.getOrigen());
             Integer consecutivo = Integer.parseInt(acumulado.getNumeroDocumento().split(numeracionNcNd.getPrefijo())[1]);
             ResolucionInterna resolucionInterna = new ResolucionInterna(consecutivo, numeracionNcNd);
-            NotaCreditoRequest notaCreditoRequest = HelperNota.createNotaCredito(emisor, acumulado, numeracionNcNd);
+            NotaCreditoRequest notaCreditoRequest = HelperNota.createNotaCredito(emisor, acumulado, numeracionNcNd, dataNote);
             notaCreditoRequest.getCabecera().setNumeroFactura(acumulado.getNumeroDocumento());
             String xml = this.convertXml(notaCreditoRequest);
             trackInfo(SOURCE_REPROCESS, xml);

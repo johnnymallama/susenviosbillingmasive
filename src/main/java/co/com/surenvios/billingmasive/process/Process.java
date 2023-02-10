@@ -50,6 +50,9 @@ public abstract class Process {
     @Autowired
     private T0400009Repository t0400009Repository;
 
+    @Autowired
+    private DataNoteRepository dataNoteRepository;
+
     public abstract void process(Resolucion resolucion, NumeracionNcNd numeracionNcNd, Emisor emisor,
                                  Acumulado acumulado, String tokenFacture);
 
@@ -231,6 +234,10 @@ public abstract class Process {
         } else {
             throw new ExceptionGeneral("Error Find T040009 no present with Guia " + numeroGuia);
         }
+    }
+
+    public DataNote findDataNoteByIdentity(Integer identity) {
+        return this.dataNoteRepository.findDataNoteByIdentity(identity);
     }
 
 }

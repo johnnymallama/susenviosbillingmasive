@@ -1,5 +1,6 @@
 package co.com.surenvios.billingmasive.process;
 
+import co.com.surenvios.librarycommon.database.view.DataNote;
 import co.com.surenvios.librarycommon.dto.internal.ResolucionInterna;
 import org.springframework.stereotype.*;
 
@@ -24,7 +25,8 @@ public class ProcessNotaDebito extends Process {
     public void process(Resolucion resolucion, NumeracionNcNd numeracionNcNd, Emisor emisor, Acumulado acumulado,
                         String tokenFacture) {
         try {
-            NotaDebitoRequest notaDebitoRequest = HelperNota.createNotaDebito(emisor, acumulado, numeracionNcNd);
+            DataNote dataNote = this.findDataNoteByIdentity(acumulado.getIdFacturaVenta());
+            NotaDebitoRequest notaDebitoRequest = HelperNota.createNotaDebito(emisor, acumulado, numeracionNcNd, dataNote);
             ResolucionInterna resolucionInterna = this.getNumeroDocumentoNcNd(numeracionNcNd);
             notaDebitoRequest.getCabecera().setNumeroFactura(resolucionInterna.numeroDocumento());
             this.updateNumberDocument(acumulado, resolucionInterna);
@@ -53,10 +55,11 @@ public class ProcessNotaDebito extends Process {
     @Override
     public void reprocess(Emisor emisor, Acumulado acumulado, String tokenFacture) {
         try {
+            DataNote dataNote = this.findDataNoteByIdentity(acumulado.getIdFacturaVenta());
             NumeracionNcNd numeracionNcNd = this.findNumeracionNcNdNumber(acumulado.getNumeroDocumento(), acumulado.getOrigen());
             Integer consecutivo = Integer.parseInt(acumulado.getNumeroDocumento().split(numeracionNcNd.getPrefijo())[1]);
             ResolucionInterna resolucionInterna = new ResolucionInterna(consecutivo, numeracionNcNd);
-            NotaDebitoRequest notaDebitoRequest = HelperNota.createNotaDebito(emisor, acumulado, numeracionNcNd);
+            NotaDebitoRequest notaDebitoRequest = HelperNota.createNotaDebito(emisor, acumulado, numeracionNcNd, dataNote);
             notaDebitoRequest.getCabecera().setNumeroFactura(acumulado.getNumeroDocumento());
             String xml = this.convertXml(notaDebitoRequest);
             trackInfo(SOURCE_REPROCESS, xml);
